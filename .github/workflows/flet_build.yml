@@ -35,7 +35,7 @@ jobs:
           packages: 'platforms;android-33 build-tools;33.0.2 platform-tools cmdline-tools;latest'
           accept-android-sdk-licenses: true
 
-      # 4. 设置 Android 环境变量（修复缩进）
+      # 4. 设置 Android 环境变量
       - name: Set Android Environment Variables
         run: |
           echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
@@ -84,7 +84,7 @@ jobs:
           echo "=== flet.yaml 内容 ==="
           cat flet.yaml
 
-      # 9. 执行打包
+      # 9. 执行打包（修复命令）
       - name: Build APK
         run: |
           echo "=== 环境信息 ==="
@@ -95,7 +95,7 @@ jobs:
           echo "Flutter Version: $(flutter --version)"
           
           yes | sdkmanager --licenses || true
-          flet build apk --verbose --yes
+          yes | flet build apk --verbose
 
       # 10. 查找并上传 APK
       - name: Find APK
