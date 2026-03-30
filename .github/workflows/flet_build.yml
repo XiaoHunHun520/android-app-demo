@@ -48,13 +48,13 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
-      # 5. 配置 Flutter
+      # 5. 配置 Flutter（升级版本）
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           cache: true
-          flutter-version: '3.13.0'
+          flutter-version: '3.19.0'
 
       # 6. 安装 Python 依赖
       - name: Install Python Packages
@@ -63,45 +63,32 @@ jobs:
           pip install flet==0.80.5
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      # 7. 检查 flet.yaml 配置文件
+      # 7. 检查 flet.yaml
       - name: Check flet.yaml
         run: |
           if [ ! -f flet.yaml ]; then
-            echo "ERROR: flet.yaml not found! Creating default..."
-            cat > flet.yaml << EOF
-          app:
-            name: android-app-demo
-            version: 1.0.0
-          flet:
-            entrypoint: main.py
-            android:
-              package: com.example.androidappdemo
-              min_sdk_version: 21
-              target_sdk_version: 33
-          EOF
+            echo "ERROR: flet.yaml 不存在！"
+            exit 1
           fi
           echo "=== flet.yaml 内容 ==="
           cat flet.yaml
 
-      # 8. 执行打包
+      # 8. 执行打包（修复版）
       - name: Build APK
         run: |
           echo "=== 环境信息 ==="
-          echo "ANDROID_HOME: $ANDROID_HOME"
-          echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
+          echo "当前目录: $(pwd)"
+          echo "目录内容: $(ls -la)"
           echo "Python Version: $(python --version)"
           echo "Flet Version: $(pip show flet | grep Version)"
           echo "Flutter Version: $(flutter --version)"
           
           yes | sdkmanager --licenses || true
           
-          flet pack main.py --android --verbose 2>&1 | tee build.log
-          
-          # 显示打包后的目录结构
-          echo "=== 打包完成后的目录 ==="
-          ls -R
+          # 执行打包（不掩盖退出码）
+          flet pack main.py --android
 
-      # 9. 查找并上传 APK（修复版）
+      # 9. 查找并上传 APK
       - name: Find APK
         run: |
           echo "=== 查找 APK 文件 ==="
@@ -114,10 +101,6 @@ jobs:
             ls -la build_output/
           else
             echo "ERROR: 未找到 APK 文件！"
-            if [ -d "build" ]; then
-              echo "=== build 目录内容 ==="
-              ls -R build/
-            fi
             exit 1
           fi
 
@@ -134,8 +117,8 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: build-log
-          path: build.log
-      
+          path: .
+
       # 10. 设置 Gradle 内存
       - name: Set Gradle Memory
         run: |
