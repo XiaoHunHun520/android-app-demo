@@ -5,6 +5,10 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+# 处理 Node.js 20 弃用警告（可选）
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -28,17 +32,18 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      # 3. 配置 Android SDK
+      # 3. 配置 Android SDK（修复参数）
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          api-level: 33
-          build-tools: 33.0.2
+          packages: 'platforms;android-33 build-tools;33.0.2 platform-tools'
+          accept-android-sdk-licenses: true
 
       - name: Set Android Environment Variables
         run: |
           echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
           echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          echo "PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools" >> $GITHUB_ENV
 
       # 4. 配置 Python
       - name: Set up Python 3.11
@@ -53,7 +58,7 @@ jobs:
         with:
           channel: 'stable'
           cache: true
-          flutter-version: '3.19.0'  # 指定具体 Flutter 版本更稳定
+          flutter-version: '3.19.0'
 
       # 6. 安装 Python 依赖
       - name: Install Python Packages
@@ -79,13 +84,17 @@ jobs:
               target_sdk_version: 33
           EOF
           fi
-          cat flet.yaml  # 打印配置便于调试
+          echo "=== flet.yaml 内容 ==="
+          cat flet.yaml
 
       # 8. 执行打包
       - name: Build APK
         run: |
-          # 接受 Android 许可证
-          yes | sdkmanager --licenses || true
+          # 显示环境信息
+          echo "=== 环境信息 ==="
+          echo "ANDROID_HOME: $ANDROID_HOME"
+          echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
+          flutter doctor -v
           
           # 执行打包
           flet build apk --verbose
@@ -93,6 +102,7 @@ jobs:
       # 9. 查找并上传 APK
       - name: Find APK
         run: |
+          echo "=== 查找 APK 文件 ==="
           find . -name "*.apk" -type f
           mkdir -p build_output
           cp -r $(find . -name "*.apk" -type f | head -1) build_output/ || true
