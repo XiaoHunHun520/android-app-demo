@@ -39,16 +39,14 @@ def main(page: ft.Page):
             page.update()
 
     # 3. 将控件添加到页面布局中
-    # 修复：替换不存在的颜色常量
     app_bar = ft.AppBar(
         leading=ft.Icon(ft.Icons.COLOR_LENS),
         leading_width=40,
         title=ft.Text("Python 安卓开发"),
         center_title=False,
-        bgcolor=ft.Colors.SURFACE,  # 替换 SURFACE_VARIANT → SURFACE
+        bgcolor=ft.Colors.SURFACE,
     )
     
-    # 使用 Column 确保内容正确显示
     page.add(
         app_bar,
         ft.Column(
@@ -73,7 +71,7 @@ def main(page: ft.Page):
                 ft.Container(height=20),
                 ft.Text(
                     "这是一个由 Python 和 Flet 驱动的原生 UI App", 
-                    color=ft.Colors.GREY,  # 替换 GREY_700 → GREY
+                    color=ft.Colors.GREY,
                     text_align=ft.TextAlign.CENTER
                 ),
             ],
@@ -82,7 +80,6 @@ def main(page: ft.Page):
         ),
     )
 
-# 4. 启动 App（使用新 API 消除警告）
+# 4. 启动 App
 if __name__ == "__main__":
-    # 0.23.0 使用 ft.app() 而非 ft.run()
-    ft.app(main)  
+    ft.app(target=main)
