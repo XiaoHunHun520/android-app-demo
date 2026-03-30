@@ -84,4 +84,4 @@ def main(page: ft.Page):
 
 # 4. 启动 App（使用新 API 消除警告）
 if __name__ == "__main__":
-    ft.run(main)  # 替换 ft.app(main) → ft.run(main)
+    ft.app(main)  # 0.23.0 使用 ft.app() 而非 ft.run()

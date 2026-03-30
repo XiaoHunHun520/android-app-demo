@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v5  # 升级到 v5
+        uses: actions/checkout@v5
 
       # 1. 基础环境：安装系统依赖
       - name: Install System Dependencies
@@ -23,7 +23,7 @@ jobs:
 
       # 2. 配置 JDK
       - name: Set up JDK 17
-        uses: actions/setup-java@v5  # 升级到 v5
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -37,9 +37,9 @@ jobs:
 
       - name: Set Android Environment Variables
         run: |
-          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
-          echo "PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools" >> $GITHUB_ENV
+        echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+        echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+        echo "PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools" >> $GITHUB_ENV
 
       # 4. 配置 Python
       - name: Set up Python 3.11
@@ -48,20 +48,20 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
-      # 5. 配置 Flutter
+      # 5. 配置 Flutter（修复版本 - 关键）
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           cache: true
-          flutter-version: '3.19.0'
+          flutter-version: '3.24.0'  # 升级到兼容版本
 
-      # 6. 安装 Python 依赖（修复 Flet 版本）
+      # 6. 安装 Python 依赖（固定 Flet 版本）
       - name: Install Python Packages
         run: |
           python -m pip install --upgrade pip
-          # 指定 Flet 版本与本地代码兼容
-          pip install flet>=0.80.0
+          # 固定 Flet 版本避免自动升级
+          pip install flet==0.23.0
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       # 7. 检查 flet.yaml 配置文件
@@ -84,7 +84,7 @@ jobs:
           echo "=== flet.yaml 内容 ==="
           cat flet.yaml
 
-      # 8. 执行打包
+      # 8. 执行打包（添加自动确认）
       - name: Build APK
         run: |
           # 显示环境信息
@@ -93,13 +93,13 @@ jobs:
           echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
           echo "Python Version: $(python --version)"
           echo "Flet Version: $(pip show flet | grep Version)"
-          flutter doctor -v
+          echo "Flutter Version: $(flutter --version)"
           
           # 接受许可证
           yes | sdkmanager --licenses || true
           
-          # 执行打包
-          flet build apk --verbose
+          # 执行打包（添加 --yes 自动确认）
+          flet build apk --verbose --yes
 
       # 9. 查找并上传 APK
       - name: Find APK
