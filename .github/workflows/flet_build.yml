@@ -28,7 +28,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      # 3. 配置 Android SDK（关键修复）
+      # 3. 配置 Android SDK
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
@@ -47,12 +47,13 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
-      # 5. 配置 Flutter（升级版本）
+      # 5. 配置 Flutter（修复版本）
       - name: Set up Flutter
-        uses: subosito/flutter-action@v3
+        uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           cache: true
+          flutter-version: '3.19.0'  # 指定具体 Flutter 版本更稳定
 
       # 6. 安装 Python 依赖
       - name: Install Python Packages
@@ -61,7 +62,7 @@ jobs:
           pip install flet>=0.20.0
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      # 7. 检查 flet.yaml 配置文件（关键修复）
+      # 7. 检查 flet.yaml 配置文件
       - name: Check flet.yaml
         run: |
           if [ ! -f flet.yaml ]; then
@@ -78,8 +79,9 @@ jobs:
               target_sdk_version: 33
           EOF
           fi
+          cat flet.yaml  # 打印配置便于调试
 
-      # 8. 执行打包（修复命令）
+      # 8. 执行打包
       - name: Build APK
         run: |
           # 接受 Android 许可证
