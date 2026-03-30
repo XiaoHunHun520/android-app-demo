@@ -35,36 +35,36 @@ jobs:
           packages: 'platforms;android-33 build-tools;33.0.2 platform-tools cmdline-tools;latest'
           accept-android-sdk-licenses: true
 
+      # 4. 设置 Android 环境变量（修复缩进）
       - name: Set Android Environment Variables
         run: |
-        echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
-        echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
-        echo "PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools" >> $GITHUB_ENV
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          echo "PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools" >> $GITHUB_ENV
 
-      # 4. 配置 Python
+      # 5. 配置 Python
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
 
-      # 5. 配置 Flutter（修复版本 - 关键）
+      # 6. 配置 Flutter
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           cache: true
-          flutter-version: '3.24.0'  # 升级到兼容版本
+          flutter-version: '3.24.0'
 
-      # 6. 安装 Python 依赖（固定 Flet 版本）
+      # 7. 安装 Python 依赖
       - name: Install Python Packages
         run: |
           python -m pip install --upgrade pip
-          # 固定 Flet 版本避免自动升级
           pip install flet==0.23.0
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      # 7. 检查 flet.yaml 配置文件
+      # 8. 检查 flet.yaml 配置文件
       - name: Check flet.yaml
         run: |
           if [ ! -f flet.yaml ]; then
@@ -84,10 +84,9 @@ jobs:
           echo "=== flet.yaml 内容 ==="
           cat flet.yaml
 
-      # 8. 执行打包（添加自动确认）
+      # 9. 执行打包
       - name: Build APK
         run: |
-          # 显示环境信息
           echo "=== 环境信息 ==="
           echo "ANDROID_HOME: $ANDROID_HOME"
           echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
@@ -95,13 +94,10 @@ jobs:
           echo "Flet Version: $(pip show flet | grep Version)"
           echo "Flutter Version: $(flutter --version)"
           
-          # 接受许可证
           yes | sdkmanager --licenses || true
-          
-          # 执行打包（添加 --yes 自动确认）
           flet build apk --verbose --yes
 
-      # 9. 查找并上传 APK
+      # 10. 查找并上传 APK
       - name: Find APK
         run: |
           echo "=== 查找 APK 文件 ==="
