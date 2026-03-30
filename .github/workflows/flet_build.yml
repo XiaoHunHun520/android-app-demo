@@ -48,7 +48,7 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
-      # 5. 配置 Flutter（升级版本）
+      # 5. 配置 Flutter
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -73,20 +73,25 @@ jobs:
           echo "=== flet.yaml 内容 ==="
           cat flet.yaml
 
-      # 8. 执行打包（修复版）
+      # 8. 执行打包（使用新命令）
       - name: Build APK
         run: |
           echo "=== 环境信息 ==="
-          echo "当前目录: $(pwd)"
-          echo "目录内容: $(ls -la)"
+          echo "当前目录：$(pwd)"
+          echo "目录内容：$(ls -la)"
           echo "Python Version: $(python --version)"
           echo "Flet Version: $(pip show flet | grep Version)"
           echo "Flutter Version: $(flutter --version)"
           
+          if [ ! -f flet.yaml ]; then
+            echo "ERROR: flet.yaml 不存在！"
+            exit 1
+          fi
+          
           yes | sdkmanager --licenses || true
           
-          # 执行打包（不掩盖退出码）
-          flet pack main.py --android
+          # 使用新命令构建 APK
+          flet build apk
 
       # 9. 查找并上传 APK
       - name: Find APK
