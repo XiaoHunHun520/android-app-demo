@@ -1,11 +1,10 @@
-name: Pro Android Build (Node24 Optimized)
+name: Ultimate Android Build 2026
 
 on:
   push:
     branches: [ main ]
-  workflow_dispatch: # 允许手动点击按钮运行
+  workflow_dispatch:
 
-# 强制使用 Node 24 解决弃用警告
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
@@ -14,69 +13,52 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. 拉取代码
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 2. 预处理：防止缺少 requirements.txt 导致缓存报错
-      - name: Ensure Requirements File
+      # 1. 基础环境：安装 Linux 缺失的编译支持库
+      - name: Install System Dependencies
         run: |
-          if [ ! -f requirements.txt ]; then
-            echo "flet" > requirements.txt
-          fi
-
-      # 3. 设置 Java 环境 (使用 v4 以适配新版 Node)
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libgles2-mesa-dev libegl1-mesa-dev xorg-dev \
+            libgl1-mesa-dev libgbm-dev
+          
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # 4. 设置 Python 环境
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip' # 自动缓存依赖，加快后续速度
 
-      # 5. 设置 Flutter 环境 (Flet 打包的核心引擎)
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
           channel: 'stable'
           cache: true
 
-      # 6. 安装环境依赖
-      - name: Install Dependencies
+      # 2. 安装 Python 依赖
+      - name: Install Python Packages
         run: |
           python -m pip install --upgrade pip
           pip install flet
-          # 安装项目所需的额外库
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          # 如果没有 requirements.txt，确保 flet 已经安装
+          if [ ! -f requirements.txt ]; then echo "flet" > requirements.txt; fi
 
-      # 7. 关键步骤：自动接受 Android SDK 协议
-      - name: Accept Android Licenses
-        run: |
-          # 解决 build 过程中可能出现的协议未授权报错
-          yes | sdkmanager --licenses || true
-
-      # 8. 执行 Flet 打包
-      # --verbose 模式会输出详细日志，如果失败，你可以看到具体是哪一行报错
+      # 3. 执行打包 (核心逻辑修改)
       - name: Build APK
         run: |
+          # 加上 --accept-licenses 自动处理协议
+          # 加上 --no-version-check 避免版本更新干扰
           flet build apk --verbose --output build_output
 
-      # 9. 整理并重命名产物 (带上日期，方便管理)
-      - name: Prepare Artifacts
-        run: |
-          mkdir -p deploy
-          cp build_output/*.apk deploy/app-$(date +'%Y%m%d').apk
-
-      # 10. 上传 APK
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: python-android-app
-          path: deploy/*.apk
-          retention-days: 5
+          name: my-python-app
+          path: build_output/*.apk
