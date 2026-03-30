@@ -10,11 +10,7 @@ flutter:
 
 flet:
   entrypoint: main.py
-  android:
-    package: com.example.androidappdemo
-    min_sdk_version: 21
-    target_sdk_version: 33
-
+  
   # Android 配置
   android:
     package: com.example.androidappdemo
