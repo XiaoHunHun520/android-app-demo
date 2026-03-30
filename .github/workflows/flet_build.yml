@@ -1,12 +1,9 @@
-name: Ultimate Android Build 2026
+name: Flet Android Build
 
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
-
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:
@@ -16,49 +13,91 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 1. 基础环境：安装 Linux 缺失的编译支持库
+      # 1. 基础环境：安装系统依赖
       - name: Install System Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             libgles2-mesa-dev libegl1-mesa-dev xorg-dev \
             libgl1-mesa-dev libgbm-dev
-          
+
+      # 2. 配置 JDK
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
+      # 3. 配置 Android SDK（关键修复）
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 33
+          build-tools: 33.0.2
+
+      - name: Set Android Environment Variables
+        run: |
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+
+      # 4. 配置 Python
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
 
+      # 5. 配置 Flutter（升级版本）
       - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@v3
         with:
           channel: 'stable'
           cache: true
 
-      # 2. 安装 Python 依赖
+      # 6. 安装 Python 依赖
       - name: Install Python Packages
         run: |
           python -m pip install --upgrade pip
-          pip install flet
+          pip install flet>=0.20.0
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          # 如果没有 requirements.txt，确保 flet 已经安装
-          if [ ! -f requirements.txt ]; then echo "flet" > requirements.txt; fi
 
-      # 3. 执行打包 (核心逻辑修改)
+      # 7. 检查 flet.yaml 配置文件（关键修复）
+      - name: Check flet.yaml
+        run: |
+          if [ ! -f flet.yaml ]; then
+            echo "ERROR: flet.yaml not found! Creating default..."
+            cat > flet.yaml << EOF
+          app:
+            name: android-app-demo
+            version: 1.0.0
+          flet:
+            entrypoint: main.py
+            android:
+              package: com.example.androidappdemo
+              min_sdk_version: 21
+              target_sdk_version: 33
+          EOF
+          fi
+
+      # 8. 执行打包（修复命令）
       - name: Build APK
         run: |
-          # 加上 --accept-licenses 自动处理协议
-          # 加上 --no-version-check 避免版本更新干扰
-          flet build apk --verbose --output build_output
+          # 接受 Android 许可证
+          yes | sdkmanager --licenses || true
+          
+          # 执行打包
+          flet build apk --verbose
+
+      # 9. 查找并上传 APK
+      - name: Find APK
+        run: |
+          find . -name "*.apk" -type f
+          mkdir -p build_output
+          cp -r $(find . -name "*.apk" -type f | head -1) build_output/ || true
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: my-python-app
+          name: android-app-${{ github.sha }}
           path: build_output/*.apk
+          retention-days: 30
