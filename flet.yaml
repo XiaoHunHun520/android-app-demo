@@ -1,0 +1,31 @@
+# Flet 打包配置文件
+app:
+  name: android-app-demo
+  version: 1.0.0
+  description: Flet Android App Demo
+  author: Your Name
+
+flutter:
+  uses-material-design: true
+
+flet:
+  entrypoint: main.py
+  
+  # Android 配置
+  android:
+    package: com.example.androidappdemo
+    min_sdk_version: 21
+    target_sdk_version: 33
+    version_code: 1
+    version_name: "1.0.0"
+    permissions:
+      - INTERNET
+    
+  # iOS 配置（可选）
+  ios:
+    bundle_identifier: com.example.androidappdemo
+    min_ios_version: 12.0
+    
+  # Web 配置（可选）
+  web:
+    route_url_strategy: hash
