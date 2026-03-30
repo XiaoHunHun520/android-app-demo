@@ -1,0 +1,63 @@
+name: Build Flet Android APK
+
+on:
+  push:
+    branches: [ main ]  # 每次代码推送到 main 分支时触发
+
+jobs:
+  build_apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. 设置 Python 环境
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # 3. 设置 Java 环境 (Flutter 打包 APK 必需)
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # 4. 设置 Flutter 环境 (这是 Flet 核心)
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      # 5. 缓存 Python 和 Flutter 依赖，加快后续速度
+      - name: Cache Pip and Flutter
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.pub-cache
+          key: ${{ runner.os }}-flet-${{ hashFiles('main.py') }}
+
+      # 6. 安装 Flet 和依赖工具
+      - name: Install dependencies
+        run: |
+          pip install --upgrade flet
+          # 如果你的 App 引用了其他 pip 库，在这里加上
+          # pip install requests
+
+      # 7. 执行 Flet 打包命令
+      - name: Build APK
+        run: |
+          # 关键命令。--output 指定输出目录
+          # 可以加上其他参数如 --product-name "我的新应用"
+          flet build apk --output build/app/outputs/flutter-apk
+
+      # 8. 上传生成的 APK 产物
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: flet-app-apk
+          path: build/app/outputs/flutter-apk/*.apk
