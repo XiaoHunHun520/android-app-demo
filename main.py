@@ -9,7 +9,7 @@ def main(page: ft.Page):
     page.padding = 20
     
     # 2. 定义界面元素 (控件)
-    txt_number = ft.Text(value="0", size=60, color=ft.colors.BLUE, weight="bold")
+    txt_number = ft.Text(value="0", size=60, color=ft.Colors.BLUE, weight="bold")
     
     # 定义点击事件逻辑
     def minus_click(e):
@@ -17,13 +17,13 @@ def main(page: ft.Page):
             current_value = int(txt_number.value)
             txt_number.value = str(current_value - 1)
             if current_value - 1 < 0:
-                txt_number.color = ft.colors.RED
+                txt_number.color = ft.Colors.RED
             else:
-                txt_number.color = ft.colors.BLUE
+                txt_number.color = ft.Colors.BLUE
             page.update()
         except ValueError:
             txt_number.value = "0"
-            txt_number.color = ft.colors.BLUE
+            txt_number.color = ft.Colors.BLUE
             page.update()
 
     def plus_click(e):
@@ -31,20 +31,21 @@ def main(page: ft.Page):
             current_value = int(txt_number.value)
             txt_number.value = str(current_value + 1)
             if current_value + 1 >= 0:
-                txt_number.color = ft.colors.BLUE
+                txt_number.color = ft.Colors.BLUE
             page.update()
         except ValueError:
             txt_number.value = "0"
-            txt_number.color = ft.colors.BLUE
+            txt_number.color = ft.Colors.BLUE
             page.update()
 
     # 3. 将控件添加到页面布局中
+    # 修复：替换不存在的颜色常量
     app_bar = ft.AppBar(
-        leading=ft.Icon(ft.icons.PALETTE),
+        leading=ft.Icon(ft.Icons.COLOR_LENS),
         leading_width=40,
         title=ft.Text("Python 安卓开发"),
         center_title=False,
-        bgcolor=ft.colors.SURFACE_VARIANT,
+        bgcolor=ft.Colors.SURFACE,  # 替换 SURFACE_VARIANT → SURFACE
     )
     
     # 使用 Column 确保内容正确显示
@@ -55,15 +56,15 @@ def main(page: ft.Page):
                 ft.Row(
                     [
                         ft.FloatingActionButton(
-                            icon=ft.icons.REMOVE, 
+                            icon=ft.Icons.REMOVE, 
                             on_click=minus_click, 
-                            bgcolor=ft.colors.RED_200
+                            bgcolor=ft.Colors.RED_200
                         ),
                         txt_number,
                         ft.FloatingActionButton(
-                            icon=ft.icons.ADD, 
+                            icon=ft.Icons.ADD, 
                             on_click=plus_click,
-                            bgcolor=ft.colors.GREEN_200
+                            bgcolor=ft.Colors.GREEN_200
                         ),
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,
@@ -72,7 +73,7 @@ def main(page: ft.Page):
                 ft.Container(height=20),
                 ft.Text(
                     "这是一个由 Python 和 Flet 驱动的原生 UI App", 
-                    color=ft.colors.GREY_700,
+                    color=ft.Colors.GREY,  # 替换 GREY_700 → GREY
                     text_align=ft.TextAlign.CENTER
                 ),
             ],
@@ -81,7 +82,6 @@ def main(page: ft.Page):
         ),
     )
 
-# 4. 启动 App（兼容多平台）
+# 4. 启动 App（使用新 API 消除警告）
 if __name__ == "__main__":
-    # view 参数确保移动端正常渲染
-    ft.app(target=main, view=ft.FLET_APP)
+    ft.run(main)  # 替换 ft.app(main) → ft.run(main)
